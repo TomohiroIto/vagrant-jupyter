@@ -1,0 +1,55 @@
+---
+- hosts: all
+  sudo: yes
+  user: vagrant
+  tasks:
+    - name: install yum utils
+      yum: name=yum-utils
+
+    - name: install epel repo
+      yum: name=epel-release
+
+    - name: install python-pip
+      yum: name=python-pip enablerepo=epel
+
+    - name: add docker repo
+      shell: yum-config-manager \
+               --add-repo \
+               https://docs.docker.com/engine/installation/linux/repo_files/centos/docker.repo
+
+    - name: add docker repo 2
+      shell: yum makecache fast
+
+    - name: install docker
+      yum: name=docker-engine
+
+    - name: install docker-py
+      pip:
+        name: "docker-py"
+        version: 1.7.1
+        state: present
+
+    - name: start docker
+      shell: systemctl start docker
+
+    - name: boot setup
+      shell: systemctl enable docker
+
+    - name: add vagrant user to docker group
+      shell: gpasswd -a vagrant docker
+
+    - name: build docker image
+      shell: docker build -t python/jupyter:latest /vagrant
+
+    - name: run container
+      shell: docker run -d --name jupyter \
+          -p 8888:8888 \
+          -v /vagrant/jupyter:/jupyter \
+          -v /vagrant/data:/data \
+          python/jupyter:latest
+
+    - name: enable jupyter container startup
+      shell: systemctl daemon-reload
+
+    - name: enable jupyter container startup
+      shell: systemctl enable jupyter.service

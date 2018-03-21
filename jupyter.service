@@ -1,0 +1,11 @@
+[Unit]
+Description=jupyter
+After=docker.service
+Requires=vagrant.mount
+
+[Service]
+Type=oneshot
+ExecStart=/bin/docker restart jupyter
+
+[Install]
+WantedBy=vagrant.mount
